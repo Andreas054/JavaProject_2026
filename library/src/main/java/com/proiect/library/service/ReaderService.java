@@ -7,6 +7,8 @@ import com.proiect.library.model.Reader;
 import com.proiect.library.repository.LoanRepository;
 import com.proiect.library.repository.ReaderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +22,9 @@ public class ReaderService {
     private final ReaderRepository readerRepository;
     private final LoanRepository loanRepository;
 
-    public List<ReaderDTO> getAllReaders() {
-        return readerRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public Page<ReaderDTO> getAllReaders(Pageable pageable) {
+        return readerRepository.findAll(pageable)
+                .map(this::convertToDTO);
     }
 
     public ReaderDTO getReaderById(Long id) {
@@ -90,4 +91,3 @@ public class ReaderService {
         return dto;
     }
 }
-

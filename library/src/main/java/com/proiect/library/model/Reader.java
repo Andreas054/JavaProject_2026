@@ -24,4 +24,7 @@ public class Reader {
 
     @OneToMany(mappedBy = "reader")
     private Set<Loan> loans;
+
+    @OneToOne(mappedBy = "reader", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ReaderDetails readerDetails;
 }

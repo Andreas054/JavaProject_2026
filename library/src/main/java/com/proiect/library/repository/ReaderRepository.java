@@ -12,4 +12,3 @@ public interface ReaderRepository extends JpaRepository<Reader, Long> {
 
     boolean existsByEmail(String email);
 }
-

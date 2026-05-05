@@ -8,7 +8,11 @@ public class LibraryApplication {
 //    http://localhost:8080/swagger-ui/index.html
 
 	public static void main(String[] args) {
-		SpringApplication.run(LibraryApplication.class, args);
+        try {
+            SpringApplication.run(LibraryApplication.class, args);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 }

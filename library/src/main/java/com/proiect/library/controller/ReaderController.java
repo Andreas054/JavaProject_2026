@@ -5,6 +5,8 @@ import com.proiect.library.service.ReaderService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +20,9 @@ public class ReaderController {
     private final ReaderService readerService;
 
     @GetMapping
-    @Operation(summary = "Get all readers", description = "Returns a list of all readers in the database")
-    public ResponseEntity<List<ReaderDTO>> getAllReaders() {
-        return ResponseEntity.ok(readerService.getAllReaders());
+    @Operation(summary = "Get all readers", description = "Returns a paginated list of all readers in the database")
+    public ResponseEntity<Page<ReaderDTO>> getAllReaders(Pageable pageable) {
+        return ResponseEntity.ok(readerService.getAllReaders(pageable));
     }
 
     @GetMapping("/{id}")
