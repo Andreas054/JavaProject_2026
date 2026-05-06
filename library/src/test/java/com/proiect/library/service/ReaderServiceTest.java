@@ -12,6 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,15 +60,18 @@ public class ReaderServiceTest {
 
     @Test
     void testGetAllReaders() {
-        given(readerRepository.findAll()).willReturn(Arrays.asList(reader1, reader2));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Reader> readers = Arrays.asList(reader1, reader2);
+        Page<Reader> readerPage = new PageImpl<>(readers, pageable, readers.size());
+
+        given(readerRepository.findAll(pageable)).willReturn(readerPage);
         given(loanRepository.findByReader_IdAndReturnDateIsNull(1L)).willReturn(new ArrayList<>());
         given(loanRepository.findByReader_IdAndReturnDateIsNull(2L)).willReturn(new ArrayList<>());
 
+        Page<ReaderDTO> result = readerService.getAllReaders(pageable);
 
-        List<ReaderDTO> result = readerService.getAllReaders();
-
-        assertEquals(2, result.size());
-        verify(readerRepository, times(1)).findAll();
+        assertEquals(2, result.getTotalElements());
+        verify(readerRepository, times(1)).findAll(pageable);
     }
 
     @Test
@@ -82,9 +89,7 @@ public class ReaderServiceTest {
     void testGetReaderById_NotFound() {
         given(readerRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            readerService.getReaderById(1L);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> readerService.getReaderById(1L));
     }
 
     @Test
@@ -104,9 +109,7 @@ public class ReaderServiceTest {
     void testCreateReader_DuplicateEmail() {
         given(readerRepository.existsByEmail("reader1@example.com")).willReturn(true);
 
-        assertThrows(DuplicateResourceException.class, () -> {
-            readerService.createReader(readerDTO);
-        });
+        assertThrows(DuplicateResourceException.class, () -> readerService.createReader(readerDTO));
     }
 
     @Test
@@ -145,4 +148,3 @@ public class ReaderServiceTest {
         assertEquals("Reader1", result.get(0).getName());
     }
 }
-

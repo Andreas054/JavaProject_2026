@@ -11,6 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,12 +53,16 @@ public class AuthorServiceTest {
 
     @Test
     void testGetAllAuthors() {
-        given(authorRepository.findAll()).willReturn(Arrays.asList(author1, author2));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Author> authors = Arrays.asList(author1, author2);
+        Page<Author> authorPage = new PageImpl<>(authors, pageable, authors.size());
 
-        List<AuthorDTO> result = authorService.getAllAuthors();
+        given(authorRepository.findAll(pageable)).willReturn(authorPage);
 
-        assertEquals(2, result.size());
-        verify(authorRepository, times(1)).findAll();
+        Page<AuthorDTO> result = authorService.getAllAuthors(pageable);
+
+        assertEquals(2, result.getTotalElements());
+        verify(authorRepository, times(1)).findAll(pageable);
     }
 
     @Test
@@ -71,9 +79,7 @@ public class AuthorServiceTest {
     void testGetAuthorById_NotFound() {
         given(authorRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            authorService.getAuthorById(1L);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> authorService.getAuthorById(1L));
     }
 
     @Test
@@ -92,9 +98,7 @@ public class AuthorServiceTest {
     void testCreateAuthor_Duplicate() {
         given(authorRepository.findByName("Author1")).willReturn(Optional.of(author1));
 
-        assertThrows(DuplicateResourceException.class, () -> {
-            authorService.createAuthor(authorDTO);
-        });
+        assertThrows(DuplicateResourceException.class, () -> authorService.createAuthor(authorDTO));
     }
 
     @Test
@@ -119,14 +123,4 @@ public class AuthorServiceTest {
 
         verify(authorRepository, times(1)).deleteById(1L);
     }
-
-    @Test
-    void testSearchAuthorsByName() {
-        given(authorRepository.findAll()).willReturn(Arrays.asList(author1, author2));
-
-        List<AuthorDTO> result = authorService.searchAuthorsByName("Author");
-
-        assertEquals(2, result.size());
-    }
 }
-

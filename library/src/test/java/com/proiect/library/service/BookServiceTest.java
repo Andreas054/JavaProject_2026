@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -84,12 +88,16 @@ public class BookServiceTest {
 
     @Test
     void testGetAllBooks() {
-        given(bookRepository.findAll()).willReturn(Arrays.asList(book1, book2));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Book> books = Arrays.asList(book1, book2);
+        Page<Book> bookPage = new PageImpl<>(books, pageable, books.size());
 
-        List<BookDTO> result = bookService.getAllBooks();
+        given(bookRepository.findAll(pageable)).willReturn(bookPage);
 
-        assertEquals(2, result.size());
-        verify(bookRepository, times(1)).findAll();
+        Page<BookDTO> result = bookService.getAllBooks(pageable);
+
+        assertEquals(2, result.getTotalElements());
+        verify(bookRepository, times(1)).findAll(pageable);
     }
 
     @Test
@@ -106,9 +114,7 @@ public class BookServiceTest {
     void testGetBookById_NotFound() {
         given(bookRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> {
-            bookService.getBookById(1L);
-        });
+        assertThrows(ResourceNotFoundException.class, () -> bookService.getBookById(1L));
     }
 
     @Test
@@ -129,9 +135,7 @@ public class BookServiceTest {
     void testCreateBook_DuplicateIsbn() {
         given(bookRepository.findByIsbn(anyString())).willReturn(Optional.of(book1));
 
-        assertThrows(DuplicateResourceException.class, () -> {
-            bookService.createBook(bookDTO);
-        });
+        assertThrows(DuplicateResourceException.class, () -> bookService.createBook(bookDTO));
     }
 
     @Test
@@ -170,4 +174,3 @@ public class BookServiceTest {
         verify(bookRepository, times(1)).findByTitleContainingIgnoreCase("Title");
     }
 }
-
