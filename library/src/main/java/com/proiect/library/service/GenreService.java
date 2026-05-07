@@ -6,6 +6,8 @@ import com.proiect.library.exception.ResourceNotFoundException;
 import com.proiect.library.model.Genre;
 import com.proiect.library.repository.GenreRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,10 @@ public class GenreService {
         return genreRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    public Page<GenreDTO> getAllGenres(Pageable pageable) {
+        return genreRepository.findAll(pageable).map(this::convertToDTO);
     }
 
     public GenreDTO getGenreById(Long id) {
@@ -70,4 +76,3 @@ public class GenreService {
         return new GenreDTO(genre.getId(), genre.getName());
     }
 }
-

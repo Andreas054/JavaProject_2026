@@ -28,9 +28,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                )
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 new AntPathRequestMatcher("/api/auth/**"),
@@ -44,23 +42,35 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/webjars/**"),
                                 new AntPathRequestMatcher("/swagger-ui.html"),
-                                new AntPathRequestMatcher("/h2-console/**")
+                                new AntPathRequestMatcher("/h2-console/**"),
+                                new AntPathRequestMatcher("/css/**"),
+                                new AntPathRequestMatcher("/js/**"),
+                                new AntPathRequestMatcher("/error/**")
                         ).permitAll()
 
-                        // Admin restrictions
+                        // admin restrictions
                         .requestMatchers(HttpMethod.POST, "/api/books", "/api/authors", "/api/genres", "/api/readers").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/books/**", "/api/authors/**", "/api/genres/**", "/api/readers/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/books/**", "/api/authors/**", "/api/genres/**", "/api/readers/**").hasRole("ADMIN")
+                        
+                        .requestMatchers(new AntPathRequestMatcher("/view/**/add")).hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/view/**/edit/**")).hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/view/**/delete/**")).hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
+                        .defaultSuccessUrl("/", true)
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
-                        .logoutUrl("/api/auth/logout")
-                        .addLogoutHandler(logoutHandler)
-                        .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
                 );
 
         return http.build();

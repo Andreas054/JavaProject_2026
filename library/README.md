@@ -20,3 +20,5 @@
 3.  Book Search: The ability to search the catalog for available books by their titles.
 4.  Book Borrowing (Create Loan): The process of loaning a book to a reader. This service will change the book's status to `BORROWED` and create a `Loan` record.
 5.  Book Return (End Loan): The process of returning a book. This service will update the `Loan` record (set `returnDate`) and change the book's status back to `AVAILABLE`.
+
+![ER Diagram](ER.png)

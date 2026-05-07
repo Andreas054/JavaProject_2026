@@ -11,6 +11,8 @@ import com.proiect.library.repository.BookCopyRepository;
 import com.proiect.library.repository.LoanRepository;
 import com.proiect.library.repository.ReaderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,10 @@ public class LoanService {
         return loanRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    public Page<LoanDTO> getAllLoans(Pageable pageable) {
+        return loanRepository.findAll(pageable).map(this::convertToDTO);
     }
 
     public LoanDTO getLoanById(Long id) {
@@ -68,6 +74,27 @@ public class LoanService {
 
         Loan savedLoan = loanRepository.save(loan);
         return convertToDTO(savedLoan);
+    }
+
+    public LoanDTO updateLoan(Long id, LoanDTO loanDTO) {
+        Loan loan = loanRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Loan not found with id: " + id));
+
+        if (loanDTO.getBorrowDate() != null) {
+            loan.setBorrowDate(loanDTO.getBorrowDate());
+        }
+        if (loanDTO.getDueDate() != null) {
+            loan.setDueDate(loanDTO.getDueDate());
+        }
+        if (loanDTO.getReturnDate() != null) {
+            loan.setReturnDate(loanDTO.getReturnDate());
+            BookCopy bookCopy = loan.getBookCopy();
+            bookCopy.setStatus(BookStatus.AVAILABLE);
+            bookCopyRepository.save(bookCopy);
+        }
+
+        Loan updatedLoan = loanRepository.save(loan);
+        return convertToDTO(updatedLoan);
     }
 
     public LoanDTO returnBook(Long loanId, LocalDate returnDate) {
@@ -142,4 +169,3 @@ public class LoanService {
         return dto;
     }
 }
-
